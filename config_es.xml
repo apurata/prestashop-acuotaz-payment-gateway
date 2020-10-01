@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+    <name>ps_apurata</name>
+    <displayName><![CDATA[Pagos por transferencia bancaria]]></displayName>
+    <version><![CDATA[2.1.0]]></version>
+    <description><![CDATA[Accept wire payments by displaying your account details during the checkout and make it easy for your customers to purchase on your store.]]></description>
+    <author><![CDATA[PrestaShop]]></author>
+    <tab><![CDATA[payments_gateways]]></tab>
+	<confirmUninstall><![CDATA[¿Estás seguro de que quieres eliminar estos datos?]]></confirmUninstall>
+    <is_configurable>1</is_configurable>
+    <need_instance>1</need_instance>
+	<limited_countries></limited_countries>
+</module>
