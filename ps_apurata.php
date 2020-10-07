@@ -35,7 +35,7 @@ class Ps_Apurata extends PaymentModule
     {
         $this->name = 'ps_apurata';
         $this->tab = 'payments_gateways';
-        $this->version = '0.1.1';
+        $this->version = '0.1.2';
         $this->ps_versions_compliancy = array('min' => '1.7.1.0', 'max' => _PS_VERSION_);
         $this->author = 'Apurata';
         $this->controllers = array('payment', 'validation');
@@ -195,27 +195,20 @@ class Ps_Apurata extends PaymentModule
     public function hookPaymentOptions($params)
     {
         if (!$this->active) {
-            echo "<script>console.log('Doesn't active');</script>";
             return [];
         }
 
         if (!$this->checkCurrency($params['cart'])) {
-            echo "<script>console.log('checkCurrency','false');</script>";
             return [];
         }
-        echo "<script>console.log('checkCurrency','true');</script>";
 
         if (!$this->isCorrectAmount($params['cart'])) {
-            echo "<script>console.log('isCorrectAmount','false');</script>";
             return [];
         }
-        echo "<script>console.log('isCorrectAmount','true');</script>";
 
         if (!$this->ischeckHttp()) {
-            echo "<script>console.log('ischeckHttp','false');</script>";
             return [];
         }
-        echo "<script>console.log('ischeckHttp','true');</script>";
 
         $this->smarty->assign(
             $this->getTemplateVarInfos()
@@ -243,7 +236,6 @@ class Ps_Apurata extends PaymentModule
         $payment_options = [
             $newOption,
         ];
-        echo "<script>console.log('show','Apurata Payment correct');</script>";
 
         return $payment_options;
     }
@@ -319,14 +311,10 @@ class Ps_Apurata extends PaymentModule
 			|| strcasecmp('https', $isHttps) == 0
         );
         //error_log(Configuration::get('APURATA_ALLOW_HTTP'));
-        echo "<script>console.log('APURATA_ALLOW_HTTP','" . Configuration::get('APURATA_ALLOW_HTTP') . "');</script>";
-        echo "<script>console.log('isHttps','" . json_encode($isHttps) . "');</script>";
-        
+
         if (Configuration::get('APURATA_ALLOW_HTTP') == false && !$isHttps) {
-            echo "<script>console.log('return APURATA_ALLOW_HTTP && isHttps','false');</script>";
 			return false;
         }
-        echo "<script>console.log('return APURATA_ALLOW_HTTP && isHttps','true');</script>";
 		return true;
     }
     
@@ -334,19 +322,14 @@ class Ps_Apurata extends PaymentModule
     {
         $currency_order = new Currency($cart->id_currency);
         $currencies_module = $this->getCurrency($cart->id_currency);
-        echo "<script>console.log('currency_order','" . json_encode($currency_order) . "');</script>";
-        echo "<script>console.log('currencies_module','" . json_encode($currencies_module) . "');</script>";
 
         if (is_array($currencies_module)) {
             foreach ($currencies_module as $currency_module) {
                 if ($currency_order->id == $currency_module['id_currency'] && $currency_order->iso_code == 'PEN') {
-                    echo "<script>console.log('currency_order.iso_code','".$currency_order->iso_code."');</script>";
-                    echo "<script>console.log('return checkcurrency','true');</script>";
                     return true;
                 }
             }
         }
-        echo "<script>console.log('return checkcurrency','false');</script>";
         return false;
     }
 
@@ -356,16 +339,12 @@ class Ps_Apurata extends PaymentModule
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
         
         $landing_config = $this->getLandingConfig();
-        echo "<script>console.log('config','" . json_encode($landing_config) . "');</script>";
-        echo "<script>console.log('total','" . $total . "');</script>";
         if (!is_object($landing_config)) {
             return false;
         }
         if (is_object($landing_config) && ($landing_config->min_amount > $total || $landing_config->max_amount < $total)) {
-            echo "<script>console.log('correct return','false');</script>";
             return false;
 		}
-        echo "<script>console.log('correct return','true');</script>";
         return true;
     }
 
@@ -375,7 +354,6 @@ class Ps_Apurata extends PaymentModule
             "pos_webhook_url"=> $this->context->link->getModuleLink($this->name, 'updateorder', array(), true)
             ) );
         list ($httpCode, $ret) = $this->makeCurlToApurata("POST", "/pos/client/save_webhookurl", $data);
-        echo "<script>console.log('save_webhookurl','" . json_encode($httpCode) . "');</script>";
         return $httpCode;
     }
 
@@ -392,15 +370,12 @@ class Ps_Apurata extends PaymentModule
 
 		$url = Configuration::get('APURATA_DOMAIN') . $path;
 		curl_setopt($ch, CURLOPT_URL, $url);
-        echo "<script>console.log('domain','" . Configuration::get('APURATA_DOMAIN') . "');</script>";
 
 		// Timeouts
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2);    // seconds
 		curl_setopt($ch, CURLOPT_TIMEOUT, 2); // seconds
-        //echo "<script>console.log('client_token','" . Configuration::get('APURATA_CLIENT_TOKEN') . "');</script>";
 
 		$headers = array("Authorization: Bearer " . Configuration::get('APURATA_CLIENT_TOKEN'));
-        //echo "<script>console.log('config','" . json_encode($headers) . "');</script>";
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 

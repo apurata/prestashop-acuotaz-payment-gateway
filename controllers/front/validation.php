@@ -60,8 +60,7 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
         $customer = new Customer($order->id_customer);
 		$address = new Address ($order->id_address_delivery); */
 		
-        //echo "<script>console.log('customer','" . json_encode($customer) . "');</script>";
-
+		
 		$cart = new Cart($cart->id);		
 		$address =  new Address($cart->id_address_delivery);
 

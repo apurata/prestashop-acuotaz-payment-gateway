@@ -39,7 +39,6 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
 
 		$currency = $this->context->currency;
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
-        error_log("Event received: " . $event);
         switch ($event) {
             case 'onhold':
                 error_log("Creating order...");
@@ -60,6 +59,5 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
 
         $history = new OrderHistory();
         $history->changeIdOrderState($new_order_state, $id_cart);
-        //error_log("Order state updated");
 	}
 }
