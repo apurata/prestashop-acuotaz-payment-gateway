@@ -12,7 +12,7 @@ _These instructions will allow you to upload the [aCuotaz](https://apurata.com/a
 
 _Request your aCuotaz credentials with us, if you already have them continue the steps._
 
-1. Download the latest version of the file "ps_apurata.zip" from the following link: [Releases](https://github.com/apurata/prestashop-acuotaz-payment-gateway/releases)
+1. Download the latest version of the file "ps_apurata.zip" from the following link: [Releases](https://github.com/apurata/prestashop-acuotaz-payment-gateway/releases/latest)
 
 ![](images/step_releases.jpg)
 
