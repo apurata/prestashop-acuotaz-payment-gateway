@@ -65,8 +65,11 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
 		$address =  new Address($cart->id_address_delivery);
 		$description = '';
 		foreach ($cart->getProducts() as $key => $product) {
-			$description = $product['name'].' - '.$product['attributes'].', '. $description ;
-		}
+			$description = 'name: '.$product['name'].', '.
+						   'attributes: '.$product['attributes'].', '.
+						   'quantity: '.$product['cart_quantity'].', '.
+						   'subtotal: '.$product['total_wt'].'| '. $description;
+        }
 		
 		Tools::redirect( Configuration::get('APURATA_DOMAIN').
 						'/pos/crear-orden-y-continuar' .
