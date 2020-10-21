@@ -63,7 +63,11 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
 		
 		$cart = new Cart($cart->id);		
 		$address =  new Address($cart->id_address_delivery);
-
+		$description = '';
+		foreach ($cart->getProducts() as $key => $product) {
+			$description = $product['name'].' - '.$product['attributes'].', '. $description ;
+		}
+		
 		Tools::redirect( Configuration::get('APURATA_DOMAIN').
 						'/pos/crear-orden-y-continuar' .
 						'?order_id=' . urlencode($cart->id).
@@ -86,7 +90,8 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
                         '&customer_data__shipping_address_2=' . urlencode($address->address2) .
                         '&customer_data__shipping_first_name=' . urlencode($customer->firstname) .
                         '&customer_data__shipping_last_name=' . urlencode($customer->lastname) .
-                        '&customer_data__shipping_city=' . urlencode($address->city)
+                        '&customer_data__shipping_city=' . urlencode($address->city) .
+                        '&description=' . urlencode($description)
 					);
 	}
 }
