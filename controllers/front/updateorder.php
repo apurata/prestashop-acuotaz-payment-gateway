@@ -43,7 +43,8 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
             case 'onhold':
                 error_log("Creating order...");
                 $this->module->validateOrder($id_cart, Configuration::get('PS_OS_APURATA'), $total, $this->module->displayName, NULL, NULL, (int)$currency->id, false, $customer->secure_key);
-		        Tools::redirect('index.php?controller=order-confirmation&id_cart='.$id_cart.'&id_module='.$this->module->id.'&id_order='.$this->module->currentOrder.'&key='.$customer->secure_key);
+                Tools::redirect('index.php?controller=order-confirmation&id_cart='.$id_cart.'&id_module='.$this->module->id.'&id_order='.$this->module->currentOrder.'&key='.$customer->secure_key);
+                return;
             case 'validated':
                 $new_order_state = 2;
                 break;
@@ -57,7 +58,8 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
                 return;
         }
 
+        $id_order = (int)Order::getIdByCartId($id_cart);
         $history = new OrderHistory();
-        $history->changeIdOrderState($new_order_state, $id_cart);
+        $history->changeIdOrderState($new_order_state, $id_order);
 	}
 }
