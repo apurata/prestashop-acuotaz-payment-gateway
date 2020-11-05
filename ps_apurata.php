@@ -1,6 +1,6 @@
 <?php
 /**
- * Version:           0.1.0
+ * Version:           0.1.5
  * Plugin Name:       aCuotaz Apurata
  * Description:       Finance your purchases with a quick aCuotaz Apurata loan.
  * Requires PHP:      7.2
@@ -35,7 +35,7 @@ class Ps_Apurata extends PaymentModule
     {
         $this->name = 'ps_apurata';
         $this->tab = 'payments_gateways';
-        $this->version = '0.1.4';
+        $this->version = '0.1.5';
         $this->ps_versions_compliancy = array('min' => '1.7.1.0', 'max' => _PS_VERSION_);
         $this->author = 'Apurata';
         $this->controllers = array('payment', 'validation');
@@ -117,15 +117,15 @@ class Ps_Apurata extends PaymentModule
 
     public function install()
     {
-        if (!parent::install() || !$this->registerHook('paymentReturn') || !$this->registerHook('paymentOptions') || !$this->registerHook('displayShoppingCartFooter')) {
+        if (!parent::install() || 
+            !$this->registerHook('paymentReturn') || 
+            !$this->registerHook('paymentOptions') || 
+            !$this->registerHook('displayShoppingCartFooter') || 
+            !$this->registerHook('displayAdminLogin')) {
             return false;
         }
 
         $this->addOrderState($this->l('Esperando validación de Apurata'));
-        //set template cart
-        /* $filename = _PS_THEME_DIR_.'/templates/checkout/_partials/cart-detailed-actions.tpl';
-        $content = '<h1>87986b</h1>';
-        file_put_contents($filename, $content); */
         return true;
     }
 
@@ -349,11 +349,10 @@ class Ps_Apurata extends PaymentModule
     }
 
     public function sendWebhookUrl() {
-        $data = json_encode( array( 
-            "pos_client_id"=> Configuration::get('APURATA_CLIENT_ID'),
+        $url = "/pos/client/" . Configuration::get('APURATA_CLIENT_ID') . "/save_webhookurl";
+        list ($httpCode, $ret) = $this->makeCurlToApurata("POST", $url, array(
             "pos_webhook_url"=> $this->context->link->getModuleLink($this->name, 'updateorder', array(), true)
-            ) );
-        list ($httpCode, $ret) = $this->makeCurlToApurata("POST", "/pos/client/save_webhookurl", $data);
+        ));
         return $httpCode;
     }
 
@@ -363,9 +362,10 @@ class Ps_Apurata extends PaymentModule
 		return $landing_config ?? null;
     }
 
-    public function makeCurlToApurata($method, $path, $data = null) {
+    public function makeCurlToApurata($method, $path, $data = null, $fire_and_forget=FALSE) {
 		// $method: "GET" or "POST"
-		// $path: e.g. /pos/client/landing_config
+        // $path: e.g. /pos/client/landing_config
+        // If data is present, send it via JSON
 		$ch = curl_init();
 
 		$url = Configuration::get('APURATA_DOMAIN') . $path;
@@ -376,17 +376,35 @@ class Ps_Apurata extends PaymentModule
 		curl_setopt($ch, CURLOPT_TIMEOUT, 2); // seconds
 
 		$headers = array("Authorization: Bearer " . Configuration::get('APURATA_CLIENT_TOKEN'));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 
 		if (strtoupper($method) == "GET") {
 			curl_setopt($ch, CURLOPT_HTTPGET, TRUE);
 		} else if (strtoupper($method) == "POST") {
             curl_setopt($ch, CURLOPT_POST, TRUE);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 		} else {
 			throw new Exception("Method not supported: " . $method);
-		}
+        }
+        
+        if ($data) {
+            $payload = json_encode($data);
+
+            // Attach encoded JSON string to the POST fields
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+
+            // Set the content type to application/json
+            array_push($headers, 'Content-Type:application/json');
+        }
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        if ($fire_and_forget) {
+            // From: https://www.xspdf.com/resolution/52447753.html
+            curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+            // We don't use CURLOPT_TIMEOUT_MS because the name resolution fails and the
+            // whole request never goes out
+            curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
+        }
+
 		$ret = curl_exec($ch);
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		if ($httpCode != 200) {
@@ -536,5 +554,16 @@ class Ps_Apurata extends PaymentModule
             ]);
         }
         return $this->display(__FILE__, 'addon.tpl'); 
+    }
+
+    public function hookDisplayAdminLogin() {
+        $php_version = phpversion();
+        
+        $url = "/pos/client/" . Configuration::get('APURATA_CLIENT_ID') . "/context";
+        $this->makeCurlToApurata("POST", $url, array(
+            "php_version" => $php_version,
+            "prestashop_version" => _PS_VERSION_,
+            "ps_apurata_version" => $this->version,
+        ), TRUE);
     }
 }
