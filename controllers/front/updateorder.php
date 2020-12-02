@@ -31,15 +31,11 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
         $id_cart = Tools::getValue('order_id');
         $event = Tools::getValue('event');
         $new_order_state = 0;
-        error_log("New event from Apurata");
-
         $cart = new Cart($id_cart);
         $customer = new Customer($cart->id_customer);
-		if (!Validate::isLoadedObject($customer))
+	if (!Validate::isLoadedObject($customer))
             Tools::redirect('index.php?controller=order&step=1');
-        error_log("I have a cart");
-
-		$currency = $this->context->currency;
+	$currency = $this->context->currency;
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
         switch ($event) {
             case 'onhold':
@@ -81,7 +77,6 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
                 exit;
             //--------------------------
             default:
-                error_log("No soportado ".$event);
                 return;
         }
         $id_order = (int)Order::getIdByCartId($id_cart);
