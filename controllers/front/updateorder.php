@@ -31,20 +31,31 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
         $id_cart = Tools::getValue('order_id');
         $event = Tools::getValue('event');
         $new_order_state = 0;
-
         $cart = new Cart($id_cart);
         $customer = new Customer($cart->id_customer);
-		if (!Validate::isLoadedObject($customer))
-			Tools::redirect('index.php?controller=order&step=1');
-
-		$currency = $this->context->currency;
+        if (!Validate::isLoadedObject($customer))
+                Tools::redirect('index.php?controller=order&step=1');
+        $currency = $this->context->currency;
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
         switch ($event) {
             case 'onhold':
-                error_log("Creating order...");
-                $this->module->validateOrder($id_cart, Configuration::get('PS_OS_APURATA'), $total, $this->module->displayName, NULL, NULL, (int)$currency->id, false, $customer->secure_key);
-                Tools::redirect('index.php?controller=order-confirmation&id_cart='.$id_cart.'&id_module='.$this->module->id.'&id_order='.$this->module->currentOrder.'&key='.$customer->secure_key);
-                return;
+                $id_order = (int)Order::getIdByCartId($id_cart);
+                // Check if the order has already been created
+                if($id_order==0)
+                    $validation=$this->module->validateOrder(
+                        $id_cart,
+                        Configuration::get('PS_OS_APURATA'),
+                        $total,
+                        $this->module->displayName,
+                        NULL,
+                        NULL,
+                        (int)$currency->id,
+                        false,
+                        $customer->secure_key
+                    );
+                //Tools::redirect('index.php?controller=order-confirmation&id_cart='.$id_cart.'&id_module='.$this->module->id.'&id_order='.$this->module->currentOrder.'&key='.$customer->secure_key);
+                http_response_code(200);
+                exit;
             case 'validated':
                 $new_order_state = 2;
                 break;
@@ -54,12 +65,24 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
             case 'canceled':
                 $new_order_state = 6;
                 break;
+            //--states not implemented--
+            case 'created':
+                http_response_code(200);
+                exit;
+            case 'approved':
+                http_response_code(200);
+                exit;
+            case 'funded':
+                http_response_code(200);
+                exit;
+            //--------------------------
             default:
                 return;
         }
-
         $id_order = (int)Order::getIdByCartId($id_cart);
         $history = new OrderHistory();
         $history->changeIdOrderState($new_order_state, $id_order);
+        http_response_code(200);
+        exit;
 	}
 }
