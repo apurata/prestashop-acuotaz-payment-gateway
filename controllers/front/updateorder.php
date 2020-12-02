@@ -33,14 +33,14 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
         $new_order_state = 0;
         $cart = new Cart($id_cart);
         $customer = new Customer($cart->id_customer);
-	if (!Validate::isLoadedObject($customer))
-            Tools::redirect('index.php?controller=order&step=1');
-	$currency = $this->context->currency;
+        if (!Validate::isLoadedObject($customer))
+                Tools::redirect('index.php?controller=order&step=1');
+        $currency = $this->context->currency;
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
         switch ($event) {
             case 'onhold':
                 $id_order = (int)Order::getIdByCartId($id_cart);
-                //check if the order has already been created
+                // Check if the order has already been created
                 if($id_order==0)
                     $validation=$this->module->validateOrder(
                         $id_cart,
@@ -69,10 +69,10 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
             case 'created':
                 http_response_code(200);
                 exit;
-            case 'approved':    
+            case 'approved':
                 http_response_code(200);
                 exit;
-            case 'funded':    
+            case 'funded':
                 http_response_code(200);
                 exit;
             //--------------------------

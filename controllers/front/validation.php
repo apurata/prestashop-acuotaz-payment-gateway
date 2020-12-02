@@ -51,17 +51,16 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
 		$total = (float)$cart->getOrderTotal(true, Cart::BOTH);
 		// ---------CREATE ORDER-------------------------
 		//$this->module->validateOrder($cart->id, Configuration::get('PS_OS_BANKWIRE'), $total, $this->module->displayName, NULL, NULL, (int)$currency->id, false, $customer->secure_key);
-		
+
 		//Tools::redirect('index.php?controller=order-confirmation&id_cart='.$cart->id.'&id_module='.$this->module->id.'&id_order='.$this->module->currentOrder.'&key='.$customer->secure_key);
-		
+
 		// -----------------------------------------------------
 		/* $id_order = Order::getOrderByCartId((int)($cart->id));
         $order = new Order((int) $id_order);
         $customer = new Customer($order->id_customer);
 		$address = new Address ($order->id_address_delivery); */
-		
-		
-		$cart = new Cart($cart->id);		
+
+		$cart = new Cart($cart->id);
 		$address =  new Address($cart->id_address_delivery);
 		$description = '';
 		foreach ($cart->getProducts() as $key => $product) {
@@ -70,7 +69,7 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
 						   'quantity: '.$product['cart_quantity'].', '.
 						   'subtotal: '.$product['total_wt'].'| '. $description;
         }
-		
+
 		Tools::redirect( Configuration::get('APURATA_DOMAIN').
 						'/pos/crear-orden-y-continuar' .
 						'?order_id=' . urlencode($cart->id).
