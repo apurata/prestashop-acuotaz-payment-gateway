@@ -57,7 +57,7 @@ class Ps_Apurata extends PaymentModule
         if (!empty($config['APURATA_ALLOW_HTTP'])) {
             $this->details = $config['APURATA_ALLOW_HTTP'];
         }
-        $domain = getenv('APURATA_API_DOMAIN') ?: 'http://apurata.com'; // https://apurata.com
+        $domain = getenv('APURATA_API_DOMAIN') ?: 'https://apurata.com'; // https://apurata.com
         Configuration::updateValue('APURATA_DOMAIN', $domain);
 
         $this->bootstrap = true;
@@ -122,10 +122,10 @@ class Ps_Apurata extends PaymentModule
             !$this->registerHook('paymentOptions') ||
             !$this->registerHook('displayShoppingCartFooter') ||
             !$this->registerHook('displayAdminLogin')||
-            !$this->registerHook('displayProductAdditionalInfo')
-            ) {
+            !$this->registerHook('displayProductAdditionalInfo')) {
             return false;
         }
+
         $this->addOrderState($this->l('Esperando validación de Apurata'));
         return true;
     }
@@ -147,6 +147,7 @@ class Ps_Apurata extends PaymentModule
         if (Tools::isSubmit('btnSubmit')) {
             /* Configuration::updateValue(self::FLAG_DISPLAY_PAYMENT_INVITE,
                 Tools::getValue(self::FLAG_DISPLAY_PAYMENT_INVITE)); */
+
             if (!Tools::getValue('APURATA_CLIENT_TOKEN')) {
                 $this->_postErrors[] = $this->trans('Account details are required.', array(), 'Modules.Wirepayment.Admin');
             } elseif (!Tools::getValue('APURATA_CLIENT_ID')) {
@@ -337,6 +338,7 @@ class Ps_Apurata extends PaymentModule
     {
         $cart = new Cart($cart->id);
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
+
         $landing_config = $this->getLandingConfig();
         if (!is_object($landing_config)) {
             return false;
@@ -384,6 +386,7 @@ class Ps_Apurata extends PaymentModule
 		} else {
 			throw new Exception("Method not supported: " . $method);
         }
+
         if ($data) {
             $payload = json_encode($data);
 
@@ -523,6 +526,7 @@ class Ps_Apurata extends PaymentModule
             'bankwireOwner' => $bankwireOwner,
         );
     }
+
     public function generateApurataAddon($pageType,$params)
     {
         $cart = new Cart($params['cart']->id);
@@ -555,8 +559,10 @@ class Ps_Apurata extends PaymentModule
     {
         return $this->generateApurataAddon('product',$params);
     }
+
     public function hookDisplayAdminLogin() {
         $php_version = phpversion();
+
         $url = "/pos/client/" . Configuration::get('APURATA_CLIENT_ID') . "/context";
         $this->makeCurlToApurata("POST", $url, array(
             "php_version" => $php_version,
