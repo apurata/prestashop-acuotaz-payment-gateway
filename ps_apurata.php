@@ -122,7 +122,7 @@ class Ps_Apurata extends PaymentModule
             !$this->registerHook('paymentOptions') ||
             !$this->registerHook('displayShoppingCartFooter') ||
             !$this->registerHook('displayAdminLogin')||
-            !$this->registerHook('displayProductAdditionalInfo')) {
+            !$this->registerHook('displayProductPriceBlock')) {
             return false;
         }
 
@@ -555,9 +555,11 @@ class Ps_Apurata extends PaymentModule
     {
         return $this->generateApurataAddon('cart',$params);
     }
-    public function hookdisplayProductAdditionalInfo($params)
-    {
-        return $this->generateApurataAddon('product',$params);
+    public function hookdisplayProductPriceBlock($params)
+    {   if ((isset($params['type']) && $params['type'] == 'price')){
+            return $this->generateApurataAddon('product',$params);
+        }
+        return;
     }
 
     public function hookDisplayAdminLogin() {
