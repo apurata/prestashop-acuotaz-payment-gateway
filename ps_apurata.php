@@ -1,6 +1,6 @@
 <?php
 /**
- * Version:           0.1.5
+ * Version:           0.1.7
  * Plugin Name:       aCuotaz Apurata
  * Description:       Finance your purchases with a quick aCuotaz Apurata loan.
  * Requires PHP:      7.2
@@ -35,7 +35,7 @@ class Ps_Apurata extends PaymentModule
     {
         $this->name = 'ps_apurata';
         $this->tab = 'payments_gateways';
-        $this->version = '0.1.5';
+        $this->version = '0.1.7';
         $this->ps_versions_compliancy = array('min' => '1.7.1.0', 'max' => _PS_VERSION_);
         $this->author = 'Apurata';
         $this->controllers = array('payment', 'validation');
@@ -57,7 +57,7 @@ class Ps_Apurata extends PaymentModule
         if (!empty($config['APURATA_ALLOW_HTTP'])) {
             $this->details = $config['APURATA_ALLOW_HTTP'];
         }
-        $domain = getenv('APURATA_API_DOMAIN') ?: 'http://localhost:8000'; // https://apurata.com
+        $domain = getenv('APURATA_API_DOMAIN') ?: 'http://apurata.com'; // https://apurata.com
         Configuration::updateValue('APURATA_DOMAIN', $domain);
 
         $this->bootstrap = true;
@@ -146,8 +146,7 @@ class Ps_Apurata extends PaymentModule
     {
         if (Tools::isSubmit('btnSubmit')) {
             /* Configuration::updateValue(self::FLAG_DISPLAY_PAYMENT_INVITE,
-                Tools::getValue(self::FLAG_DISPLAY_PAYMENT_INVITE)); */
-                
+                Tools::getValue(self::FLAG_DISPLAY_PAYMENT_INVITE)); */   
             if (!Tools::getValue('APURATA_CLIENT_TOKEN')) {
                 $this->_postErrors[] = $this->trans('Account details are required.', array(), 'Modules.Wirepayment.Admin');
             } elseif (!Tools::getValue('APURATA_CLIENT_ID')) {
