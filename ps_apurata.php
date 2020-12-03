@@ -1,6 +1,6 @@
 <?php
 /**
- * Version:           0.1.5
+ * Version:           0.1.7
  * Plugin Name:       aCuotaz Apurata
  * Description:       Finance your purchases with a quick aCuotaz Apurata loan.
  * Requires PHP:      7.2
@@ -35,7 +35,7 @@ class Ps_Apurata extends PaymentModule
     {
         $this->name = 'ps_apurata';
         $this->tab = 'payments_gateways';
-        $this->version = '0.1.5';
+        $this->version = '0.1.7';
         $this->ps_versions_compliancy = array('min' => '1.7.1.0', 'max' => _PS_VERSION_);
         $this->author = 'Apurata';
         $this->controllers = array('payment', 'validation');
@@ -121,7 +121,8 @@ class Ps_Apurata extends PaymentModule
             !$this->registerHook('paymentReturn') ||
             !$this->registerHook('paymentOptions') ||
             !$this->registerHook('displayShoppingCartFooter') ||
-            !$this->registerHook('displayAdminLogin')) {
+            !$this->registerHook('displayAdminLogin')||
+            !$this->registerHook('displayProductPriceBlock')) {
             return false;
         }
 
@@ -526,24 +527,19 @@ class Ps_Apurata extends PaymentModule
         );
     }
 
-    public function hookDisplayShoppingCartFooter($params)
+    public function generateApurataAddon($pageType,$params)
     {
         $cart = new Cart($params['cart']->id);
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
-
-        $url = '/pos/pay-with-apurata-add-on/' . $total . '?page=cart';
-
+        $url = '/pos/pay-with-apurata-add-on/' . $total . '?page='.$pageType;
         $customer = new Customer($params['cart']->id_customer);
-
         if ($customer) {
             $url .= '&user__id=' . urlencode((string) $params['cart']->id_customer).
                 '&user__email=' . urlencode((string) $customer->email).
                 '&user__first_name=' . urlencode((string) $customer->firstname).
                 '&user__last_name=' . urlencode((string) $customer->lastname);
         }
-
         list($resp_code, $this->pay_with_apurata_addon) = $this->makeCurlToApurata("GET", $url);
-
         if ($resp_code == 200) {
             $this->smarty->assign([
                 'response' => $this->pay_with_apurata_addon,
@@ -554,6 +550,16 @@ class Ps_Apurata extends PaymentModule
             ]);
         }
         return $this->display(__FILE__, 'addon.tpl');
+    }
+    public function hookDisplayShoppingCartFooter($params)
+    {
+        return $this->generateApurataAddon('cart',$params);
+    }
+    public function hookdisplayProductPriceBlock($params)
+    {   if ((isset($params['type']) && $params['type'] == 'price')){
+            return $this->generateApurataAddon('product',$params);
+        }
+        return;
     }
 
     public function hookDisplayAdminLogin() {
