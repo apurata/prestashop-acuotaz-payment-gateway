@@ -117,11 +117,11 @@ class Ps_Apurata extends PaymentModule
 
     public function install()
     {
-        if (!parent::install() || 
-            !$this->registerHook('paymentReturn') || 
-            !$this->registerHook('paymentOptions') || 
-            !$this->registerHook('displayShoppingCartFooter') || 
-            !$this->registerHook('displayAdminLogin')|| 
+        if (!parent::install() ||
+            !$this->registerHook('paymentReturn') ||
+            !$this->registerHook('paymentOptions') ||
+            !$this->registerHook('displayShoppingCartFooter') ||
+            !$this->registerHook('displayAdminLogin')||
             !$this->registerHook('displayProductAdditionalInfo')
             ) {
             return false;
@@ -146,7 +146,7 @@ class Ps_Apurata extends PaymentModule
     {
         if (Tools::isSubmit('btnSubmit')) {
             /* Configuration::updateValue(self::FLAG_DISPLAY_PAYMENT_INVITE,
-                Tools::getValue(self::FLAG_DISPLAY_PAYMENT_INVITE)); */   
+                Tools::getValue(self::FLAG_DISPLAY_PAYMENT_INVITE)); */
             if (!Tools::getValue('APURATA_CLIENT_TOKEN')) {
                 $this->_postErrors[] = $this->trans('Account details are required.', array(), 'Modules.Wirepayment.Admin');
             } elseif (!Tools::getValue('APURATA_CLIENT_ID')) {
@@ -232,7 +232,7 @@ class Ps_Apurata extends PaymentModule
                 ')
                 ->setLogo('https://static.apurata.com/img/logo-dark-aCuotaz.svg')
                 ->setAction($this->context->link->getModuleLink($this->name, 'validation', array(), true));
-        
+
         $payment_options = [
             $newOption,
         ];
@@ -297,7 +297,7 @@ class Ps_Apurata extends PaymentModule
 
         return $this->fetch('module:ps_apurata/views/templates/hook/payment_return.tpl');
     }
-   
+
     public function ischeckHttp() {
 		$isHttps =
 			$_SERVER['HTTPS']
@@ -317,7 +317,7 @@ class Ps_Apurata extends PaymentModule
         }
 		return true;
     }
-    
+
     public function checkCurrency($cart)
     {
         $currency_order = new Currency($cart->id_currency);
@@ -337,7 +337,6 @@ class Ps_Apurata extends PaymentModule
     {
         $cart = new Cart($cart->id);
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
-        
         $landing_config = $this->getLandingConfig();
         if (!is_object($landing_config)) {
             return false;
@@ -385,7 +384,6 @@ class Ps_Apurata extends PaymentModule
 		} else {
 			throw new Exception("Method not supported: " . $method);
         }
-        
         if ($data) {
             $payload = json_encode($data);
 
@@ -524,7 +522,7 @@ class Ps_Apurata extends PaymentModule
             'bankwireAddress' => $bankwireAddress,
             'bankwireOwner' => $bankwireOwner,
         );
-    } 
+    }
     public function generateApurataAddon($pageType,$params)
     {
         $cart = new Cart($params['cart']->id);
@@ -537,7 +535,7 @@ class Ps_Apurata extends PaymentModule
                 '&user__first_name=' . urlencode((string) $customer->firstname).
                 '&user__last_name=' . urlencode((string) $customer->lastname);
         }
-        list($resp_code, $this->pay_with_apurata_addon) = $this->makeCurlToApurata("GET", $url);      
+        list($resp_code, $this->pay_with_apurata_addon) = $this->makeCurlToApurata("GET", $url);
         if ($resp_code == 200) {
             $this->smarty->assign([
                 'response' => $this->pay_with_apurata_addon,
