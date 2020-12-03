@@ -57,7 +57,7 @@ class Ps_Apurata extends PaymentModule
         if (!empty($config['APURATA_ALLOW_HTTP'])) {
             $this->details = $config['APURATA_ALLOW_HTTP'];
         }
-        $domain = getenv('APURATA_API_DOMAIN') ?: 'https://apurata.com'; // https://apurata.com
+        $domain = getenv('APURATA_API_DOMAIN') ?: 'http://localhost:8000'; // https://apurata.com
         Configuration::updateValue('APURATA_DOMAIN', $domain);
 
         $this->bootstrap = true;
@@ -117,14 +117,15 @@ class Ps_Apurata extends PaymentModule
 
     public function install()
     {
-        if (!parent::install() ||
-            !$this->registerHook('paymentReturn') ||
-            !$this->registerHook('paymentOptions') ||
-            !$this->registerHook('displayShoppingCartFooter') ||
-            !$this->registerHook('displayAdminLogin')) {
+        if (!parent::install() || 
+            !$this->registerHook('paymentReturn') || 
+            !$this->registerHook('paymentOptions') || 
+            !$this->registerHook('displayShoppingCartFooter') || 
+            !$this->registerHook('displayAdminLogin')|| 
+            !$this->registerHook('displayProductAdditionalInfo')
+            ) {
             return false;
         }
-
         $this->addOrderState($this->l('Esperando validación de Apurata'));
         return true;
     }
@@ -146,7 +147,7 @@ class Ps_Apurata extends PaymentModule
         if (Tools::isSubmit('btnSubmit')) {
             /* Configuration::updateValue(self::FLAG_DISPLAY_PAYMENT_INVITE,
                 Tools::getValue(self::FLAG_DISPLAY_PAYMENT_INVITE)); */
-
+                
             if (!Tools::getValue('APURATA_CLIENT_TOKEN')) {
                 $this->_postErrors[] = $this->trans('Account details are required.', array(), 'Modules.Wirepayment.Admin');
             } elseif (!Tools::getValue('APURATA_CLIENT_ID')) {
@@ -232,7 +233,7 @@ class Ps_Apurata extends PaymentModule
                 ')
                 ->setLogo('https://static.apurata.com/img/logo-dark-aCuotaz.svg')
                 ->setAction($this->context->link->getModuleLink($this->name, 'validation', array(), true));
-
+        
         $payment_options = [
             $newOption,
         ];
@@ -297,7 +298,7 @@ class Ps_Apurata extends PaymentModule
 
         return $this->fetch('module:ps_apurata/views/templates/hook/payment_return.tpl');
     }
-
+   
     public function ischeckHttp() {
 		$isHttps =
 			$_SERVER['HTTPS']
@@ -317,7 +318,7 @@ class Ps_Apurata extends PaymentModule
         }
 		return true;
     }
-
+    
     public function checkCurrency($cart)
     {
         $currency_order = new Currency($cart->id_currency);
@@ -337,7 +338,7 @@ class Ps_Apurata extends PaymentModule
     {
         $cart = new Cart($cart->id);
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
-
+        
         $landing_config = $this->getLandingConfig();
         if (!is_object($landing_config)) {
             return false;
@@ -385,7 +386,7 @@ class Ps_Apurata extends PaymentModule
 		} else {
 			throw new Exception("Method not supported: " . $method);
         }
-
+        
         if ($data) {
             $payload = json_encode($data);
 
@@ -524,26 +525,20 @@ class Ps_Apurata extends PaymentModule
             'bankwireAddress' => $bankwireAddress,
             'bankwireOwner' => $bankwireOwner,
         );
-    }
-
-    public function hookDisplayShoppingCartFooter($params)
+    } 
+    public function generateApurataAddon($pageType,$params)
     {
         $cart = new Cart($params['cart']->id);
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
-
-        $url = '/pos/pay-with-apurata-add-on/' . $total . '?page=cart';
-
+        $url = '/pos/pay-with-apurata-add-on/' . $total . '?page='.$pageType;
         $customer = new Customer($params['cart']->id_customer);
-
         if ($customer) {
             $url .= '&user__id=' . urlencode((string) $params['cart']->id_customer).
                 '&user__email=' . urlencode((string) $customer->email).
                 '&user__first_name=' . urlencode((string) $customer->firstname).
                 '&user__last_name=' . urlencode((string) $customer->lastname);
         }
-
-        list($resp_code, $this->pay_with_apurata_addon) = $this->makeCurlToApurata("GET", $url);
-
+        list($resp_code, $this->pay_with_apurata_addon) = $this->makeCurlToApurata("GET", $url);      
         if ($resp_code == 200) {
             $this->smarty->assign([
                 'response' => $this->pay_with_apurata_addon,
@@ -555,10 +550,16 @@ class Ps_Apurata extends PaymentModule
         }
         return $this->display(__FILE__, 'addon.tpl');
     }
-
+    public function hookDisplayShoppingCartFooter($params)
+    {
+        return $this->generateApurataAddon('cart',$params);
+    }
+    public function hookdisplayProductAdditionalInfo($params)
+    {
+        return $this->generateApurataAddon('product',$params);
+    }
     public function hookDisplayAdminLogin() {
         $php_version = phpversion();
-
         $url = "/pos/client/" . Configuration::get('APURATA_CLIENT_ID') . "/context";
         $this->makeCurlToApurata("POST", $url, array(
             "php_version" => $php_version,
