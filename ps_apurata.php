@@ -1,6 +1,6 @@
 <?php
 /**
- * Version:           0.1.7
+ * Version:           0.1.8
  * Plugin Name:       aCuotaz Apurata
  * Description:       Finance your purchases with a quick aCuotaz Apurata loan.
  * Requires PHP:      7.2
@@ -57,7 +57,7 @@ class Ps_Apurata extends PaymentModule
         if (!empty($config['APURATA_ALLOW_HTTP'])) {
             $this->details = $config['APURATA_ALLOW_HTTP'];
         }
-        $domain = getenv('APURATA_API_DOMAIN') ?: 'https://apurata.com'; // https://apurata.com
+        $domain = getenv('APURATA_API_DOMAIN') ?: 'https://apurata.com';
         Configuration::updateValue('APURATA_DOMAIN', $domain);
 
         $this->bootstrap = true;
@@ -216,21 +216,23 @@ class Ps_Apurata extends PaymentModule
         );
 
         $newOption = new PaymentOption();
+        $client_id = Configuration::get('APURATA_CLIENT_ID');
+        $description = <<<EOF
+                    <div id="apurata-pos-steps"></div>
+                    <script style="display:none">
+                        var r = new XMLHttpRequest();
+                        r.open("GET", "https://apurata.com/pos/{$client_id}/info-steps", true);
+                        r.onreadystatechange = function () {
+                          if (r.readyState != 4 || r.status != 200) return;
+                          var elem = document.getElementById("apurata-pos-steps");
+                          elem.innerHTML = r.responseText;
+                        };
+                        r.send();
+                    </script>
+EOF;
         $newOption->setModuleName($this->name)
                 ->setCallToActionText('Cuotas sin tarjeta de crédito - aCuotaz')
-                ->setAdditionalInformation('
-                <div id="apurata-pos-steps"></div>
-                <script>
-                    var r = new XMLHttpRequest();
-                    r.open("GET", "https://apurata.com/pos/info-steps", true);
-                    r.onreadystatechange = function () {
-                    if (r.readyState != 4 || r.status != 200) return;
-                    var elem = document.getElementById("apurata-pos-steps");
-                    elem.innerHTML = r.responseText;
-                    };
-                    r.send();
-                </script>
-                ')
+                ->setAdditionalInformation($description)
                 ->setLogo('https://static.apurata.com/img/logo-dark-aCuotaz.svg')
                 ->setAction($this->context->link->getModuleLink($this->name, 'validation', array(), true));
 
