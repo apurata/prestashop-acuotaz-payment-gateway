@@ -529,11 +529,9 @@ EOF;
         );
     }
 
-    public function generateApurataAddon($pageType,$params)
+    public function generateApurataAddon($pageType, $params, $total)
     {
-        $cart = new Cart($params['cart']->id);
-        $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
-        $url = '/pos/pay-with-apurata-add-on/' . $total . '?page='.$pageType;
+        $url = '/pos/pay-with-apurata-add-on/' . $total . '?page='. $pageType;
         $customer = new Customer($params['cart']->id_customer);
         if ($customer) {
             $url .= '&user__id=' . urlencode((string) $params['cart']->id_customer).
@@ -555,11 +553,14 @@ EOF;
     }
     public function hookDisplayShoppingCartFooter($params)
     {
-        return $this->generateApurataAddon('cart',$params);
+        $cart = new Cart($params['cart']->id);
+        $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
+        return $this->generateApurataAddon('cart', $params, $total);
     }
     public function hookdisplayProductPriceBlock($params)
-    {   if ((isset($params['type']) && $params['type'] == 'price')){
-            return $this->generateApurataAddon('product',$params);
+    {   if ((isset($params['type']) && $params['type'] == 'price')) {
+            $product = new Product($_GET['id_product']);
+            return $this->generateApurataAddon('product', $params, $product->price);
         }
         return;
     }
