@@ -57,7 +57,7 @@ class Ps_Apurata extends PaymentModule
         if (!empty($config['APURATA_ALLOW_HTTP'])) {
             $this->details = $config['APURATA_ALLOW_HTTP'];
         }
-        $domain = getenv('APURATA_API_DOMAIN') ?: 'https://apurata.com'; //'https://apurata.com'
+        $domain = getenv('APURATA_API_DOMAIN') ?: 'http://localhost:8000'; //'https://apurata.com'
         Configuration::updateValue('APURATA_DOMAIN', $domain);
 
         $this->bootstrap = true;
@@ -529,7 +529,7 @@ EOF;
         );
     }
 
-    public function generateApurataAddon($pageType, $params, $total,$variable_price=FALSE)
+    public function generateApurataAddon($pageType, $params, $total, $variable_price=FALSE)
     {
         $url = '/pos/pay-with-apurata-add-on/' . $total . '?page='. $pageType;
         $customer = new Customer($params['cart']->id_customer);
@@ -537,8 +537,10 @@ EOF;
             $url .= '&user__id=' . urlencode((string) $params['cart']->id_customer) .
                 '&user__email=' . urlencode((string) $customer->email) .
                 '&user__first_name=' . urlencode((string) $customer->firstname) .
-                '&user__last_name=' . urlencode((string) $customer->lastname) .
-                '&variable_amount=' . urldecode((string) $variable_price);
+                '&user__last_name=' . urlencode((string) $customer->lastname);
+        }
+        if ($pageType == 'product') {
+            $url .= '&variable_amount=' . urldecode((string) $variable_price);
         }
         list($resp_code, $this->pay_with_apurata_addon) = $this->makeCurlToApurata("GET", $url);
         if ($resp_code == 200) {
