@@ -93,7 +93,7 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
                         '&customer_data__billing_address_1=' . urlencode($address->address1) .
                         '&customer_data__billing_address_2=' . urlencode($address->address2) .
                         '&customer_data__billing_first_name=' . urlencode($customer->firstname) .
-						'&customer_data__billing_last_name=' . urlencode($customer->lastname) .
+                        '&customer_data__billing_last_name=' . urlencode($customer->lastname) .
                         '&customer_data__billing_city=' .   urlencode($address->city) .
                         '&customer_data__shipping_address_1=' . urlencode($address->address1) .
                         '&customer_data__shipping_address_2=' . urlencode($address->address2) .
@@ -103,6 +103,6 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
                         '&description=' . urlencode($description) .
                         $string_dni .
                         $string_ruc 
-					);
-	}
+                    );
+    }
 }
