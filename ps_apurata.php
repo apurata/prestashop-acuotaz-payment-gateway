@@ -558,16 +558,17 @@ EOF;
         return $this->generateApurataAddon('cart', $params, $total);
     }
     public function hookdisplayProductPriceBlock($params)
-    {   if ((isset($params['type']) && $params['type'] == 'price')) {
+    {   
+        if ((isset($params['type']) && $params['type'] == 'price')) {
             $product = new Product($_GET['id_product']);
             return $this->generateApurataAddon('product', $params, $product->price);
         }
         return;
     }
 
-    public function hookDisplayAdminLogin() {
+    public function hookDisplayAdminLogin()
+    {
         $php_version = phpversion();
-
         $url = "/pos/client/" . Configuration::get('APURATA_CLIENT_ID') . "/context";
         $this->makeCurlToApurata("POST", $url, array(
             "php_version" => $php_version,
