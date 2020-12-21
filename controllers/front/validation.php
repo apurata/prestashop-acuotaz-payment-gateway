@@ -68,8 +68,15 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
 						   'attributes: '.$product['attributes'].', '.
 						   'quantity: '.$product['cart_quantity'].', '.
 						   'subtotal: '.$product['total_wt'].'| '. $description;
-        }
-
+		}
+		$string_dni = '';
+		$string_ruc = '';
+		if ($address->dni) {
+			$string_dni = '&customer_data__dni='.urlencode($address->dni);
+		}
+		if ($address->ruc) {
+			$string_ruc = '&customer_data__ruc='.urlencode($address->ruc);
+		}
 		Tools::redirect( Configuration::get('APURATA_DOMAIN').
 						'/pos/crear-orden-y-continuar' .
 						'?order_id=' . urlencode($cart->id).
@@ -93,7 +100,9 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
                         '&customer_data__shipping_first_name=' . urlencode($customer->firstname) .
                         '&customer_data__shipping_last_name=' . urlencode($customer->lastname) .
                         '&customer_data__shipping_city=' . urlencode($address->city) .
-                        '&description=' . urlencode($description)
-					);
-	}
+                        '&description=' . urlencode($description) .
+                        $string_dni .
+                        $string_ruc 
+                    );
+    }
 }

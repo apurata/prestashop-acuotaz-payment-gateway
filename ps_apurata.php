@@ -1,6 +1,6 @@
 <?php
 /**
- * Version:           0.1.7
+ * Version:           0.2.0
  * Plugin Name:       aCuotaz Apurata
  * Description:       Finance your purchases with a quick aCuotaz Apurata loan.
  * Requires PHP:      7.2
@@ -35,7 +35,7 @@ class Ps_Apurata extends PaymentModule
     {
         $this->name = 'ps_apurata';
         $this->tab = 'payments_gateways';
-        $this->version = '0.1.7';
+        $this->version = '0.2.0';
         $this->ps_versions_compliancy = array('min' => '1.7.1.0', 'max' => _PS_VERSION_);
         $this->author = 'Apurata';
         $this->controllers = array('payment', 'validation');
@@ -57,7 +57,7 @@ class Ps_Apurata extends PaymentModule
         if (!empty($config['APURATA_ALLOW_HTTP'])) {
             $this->details = $config['APURATA_ALLOW_HTTP'];
         }
-        $domain = getenv('APURATA_API_DOMAIN') ?: 'https://apurata.com'; // https://apurata.com
+        $domain = getenv('APURATA_API_DOMAIN') ?: 'https://apurata.com'; //'https://apurata.com'
         Configuration::updateValue('APURATA_DOMAIN', $domain);
 
         $this->bootstrap = true;
@@ -216,21 +216,23 @@ class Ps_Apurata extends PaymentModule
         );
 
         $newOption = new PaymentOption();
+        $client_id = Configuration::get('APURATA_CLIENT_ID');
+        $description = <<<EOF
+                    <div id="apurata-pos-steps"></div>
+                    <script style="display:none">
+                        var r = new XMLHttpRequest();
+                        r.open("GET", "https://apurata.com/pos/{$client_id}/info-steps", true);
+                        r.onreadystatechange = function () {
+                          if (r.readyState != 4 || r.status != 200) return;
+                          var elem = document.getElementById("apurata-pos-steps");
+                          elem.innerHTML = r.responseText;
+                        };
+                        r.send();
+                    </script>
+EOF;
         $newOption->setModuleName($this->name)
                 ->setCallToActionText('Cuotas sin tarjeta de crédito - aCuotaz')
-                ->setAdditionalInformation('
-                <div id="apurata-pos-steps"></div>
-                <script>
-                    var r = new XMLHttpRequest();
-                    r.open("GET", "https://apurata.com/pos/info-steps", true);
-                    r.onreadystatechange = function () {
-                    if (r.readyState != 4 || r.status != 200) return;
-                    var elem = document.getElementById("apurata-pos-steps");
-                    elem.innerHTML = r.responseText;
-                    };
-                    r.send();
-                </script>
-                ')
+                ->setAdditionalInformation($description)
                 ->setLogo('https://static.apurata.com/img/logo-dark-aCuotaz.svg')
                 ->setAction($this->context->link->getModuleLink($this->name, 'validation', array(), true));
 
@@ -527,17 +529,18 @@ class Ps_Apurata extends PaymentModule
         );
     }
 
-    public function generateApurataAddon($pageType,$params)
+    public function generateApurataAddon($pageType, $params, $total, $variable_price=FALSE)
     {
-        $cart = new Cart($params['cart']->id);
-        $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
-        $url = '/pos/pay-with-apurata-add-on/' . $total . '?page='.$pageType;
+        $url = '/pos/pay-with-apurata-add-on/' . $total . '?page='. $pageType;
         $customer = new Customer($params['cart']->id_customer);
         if ($customer) {
-            $url .= '&user__id=' . urlencode((string) $params['cart']->id_customer).
-                '&user__email=' . urlencode((string) $customer->email).
-                '&user__first_name=' . urlencode((string) $customer->firstname).
+            $url .= '&user__id=' . urlencode((string) $params['cart']->id_customer) .
+                '&user__email=' . urlencode((string) $customer->email) .
+                '&user__first_name=' . urlencode((string) $customer->firstname) .
                 '&user__last_name=' . urlencode((string) $customer->lastname);
+        }
+        if ($pageType == 'product') {
+            $url .= '&variable_amount=' . urldecode((string) $variable_price);
         }
         list($resp_code, $this->pay_with_apurata_addon) = $this->makeCurlToApurata("GET", $url);
         if ($resp_code == 200) {
@@ -553,18 +556,28 @@ class Ps_Apurata extends PaymentModule
     }
     public function hookDisplayShoppingCartFooter($params)
     {
-        return $this->generateApurataAddon('cart',$params);
+        $cart = new Cart($params['cart']->id);
+        $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
+        return $this->generateApurataAddon('cart', $params, $total);
     }
     public function hookdisplayProductPriceBlock($params)
-    {   if ((isset($params['type']) && $params['type'] == 'price')){
-            return $this->generateApurataAddon('product',$params);
+    {   
+        if ((isset($params['type']) && $params['type'] == 'price')) {
+            $variable_price = FALSE;
+            $product = new Product($_GET['id_product']);
+            $id_attributes = Context::getContext()->language->id;
+            $combinations = $product->getAttributeCombinations($id_attributes);
+            if (sizeof($combinations) > 1 ) {
+                $variable_price = TRUE;
+            }
+            return $this->generateApurataAddon('product', $params, $product->price,$variable_price);
         }
         return;
     }
 
-    public function hookDisplayAdminLogin() {
+    public function hookDisplayAdminLogin()
+    {
         $php_version = phpversion();
-
         $url = "/pos/client/" . Configuration::get('APURATA_CLIENT_ID') . "/context";
         $this->makeCurlToApurata("POST", $url, array(
             "php_version" => $php_version,
