@@ -74,8 +74,8 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
 		if ($address->dni) {
 			$string_dni = '&customer_data__dni='.urlencode($address->dni);
 		}
-		if ($address->ruc) {
-			$string_ruc = '&customer_data__ruc='.urlencode($address->ruc);
+		if ($address->vat_number) {
+			$string_ruc = '&customer_data__ruc='.urlencode($address->vat_number);
 		}
 		Tools::redirect( Configuration::get('APURATA_DOMAIN').
 						'/pos/crear-orden-y-continuar' .
