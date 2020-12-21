@@ -99,7 +99,7 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
                         '&customer_data__shipping_address_2=' . urlencode($address->address2) .
                         '&customer_data__shipping_first_name=' . urlencode($customer->firstname) .
                         '&customer_data__shipping_last_name=' . urlencode($customer->lastname) .
-						'&customer_data__shipping_city=' . urlencode($address->city) .
+                        '&customer_data__shipping_city=' . urlencode($address->city) .
                         '&description=' . urlencode($description) .
                         $string_dni .
                         $string_ruc 
