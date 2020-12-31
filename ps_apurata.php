@@ -57,7 +57,7 @@ class Ps_Apurata extends PaymentModule
         if (!empty($config['APURATA_ALLOW_HTTP'])) {
             $this->details = $config['APURATA_ALLOW_HTTP'];
         }
-        $domain = getenv('APURATA_API_DOMAIN') ?: 'http://localhost:8000'; //'https://apurata.com'
+        $domain = getenv('APURATA_API_DOMAIN') ?: 'https://apurata.com'; //'https://apurata.com'
         Configuration::updateValue('APURATA_DOMAIN', $domain);
 
         $this->bootstrap = true;
