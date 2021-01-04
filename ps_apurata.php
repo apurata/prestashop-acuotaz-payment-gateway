@@ -1,6 +1,6 @@
 <?php
 /**
- * Version:           0.2.0
+ * Version:           0.2.1
  * Plugin Name:       aCuotaz Apurata
  * Description:       Finance your purchases with a quick aCuotaz Apurata loan.
  * Requires PHP:      7.2
@@ -35,7 +35,7 @@ class Ps_Apurata extends PaymentModule
     {
         $this->name = 'ps_apurata';
         $this->tab = 'payments_gateways';
-        $this->version = '0.2.0';
+        $this->version = '0.2.1';
         $this->ps_versions_compliancy = array('min' => '1.7.1.0', 'max' => _PS_VERSION_);
         $this->author = 'Apurata';
         $this->controllers = array('payment', 'validation');
@@ -541,6 +541,10 @@ EOF;
         }
         if ($pageType == 'product') {
             $url .= '&variable_amount=' . urldecode((string) $variable_price);
+        }
+        $number_of_items = $params['cart']->nbProducts();
+        if($pageType == 'cart' && $number_of_items > 1) {
+            $url .= '&multiple_products=' . urldecode('TRUE');
         }
         list($resp_code, $this->pay_with_apurata_addon) = $this->makeCurlToApurata("GET", $url);
         if ($resp_code == 200) {
