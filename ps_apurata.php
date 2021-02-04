@@ -121,8 +121,9 @@ class Ps_Apurata extends PaymentModule
             !$this->registerHook('paymentReturn') ||
             !$this->registerHook('paymentOptions') ||
             !$this->registerHook('displayShoppingCartFooter') ||
-            !$this->registerHook('displayAdminLogin')||
-            !$this->registerHook('displayProductPriceBlock')) {
+            !$this->registerHook('displayAdminLogin') ||
+            !$this->registerHook('displayProductPriceBlock') ||
+            !$this->registerHook('displayHeader')) {
             return false;
         }
 
@@ -588,5 +589,15 @@ EOF;
             "prestashop_version" => _PS_VERSION_,
             "ps_apurata_version" => $this->version,
         ), TRUE);
+    }
+    public function hookDisplayHeader(array $params)
+    {
+        error_log("---------------HOLA");
+        
+        
+        $this->context->controller->addJS("<script>alert('HOLA')</script>");
+        
+        
+        
     }
 }
