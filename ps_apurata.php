@@ -1,6 +1,6 @@
 <?php
 /**
- * Version:           0.2.1
+ * Version:           0.2.2
  * Plugin Name:       aCuotaz Apurata
  * Description:       Finance your purchases with a quick aCuotaz Apurata loan.
  * Requires PHP:      7.2
@@ -35,7 +35,7 @@ class Ps_Apurata extends PaymentModule
     {
         $this->name = 'ps_apurata';
         $this->tab = 'payments_gateways';
-        $this->version = '0.2.1';
+        $this->version = '0.2.2';
         $this->ps_versions_compliancy = array('min' => '1.7.1.0', 'max' => _PS_VERSION_);
         $this->author = 'Apurata';
         $this->controllers = array('payment', 'validation');
@@ -122,7 +122,8 @@ class Ps_Apurata extends PaymentModule
             !$this->registerHook('paymentOptions') ||
             !$this->registerHook('displayShoppingCartFooter') ||
             !$this->registerHook('displayAdminLogin')||
-            !$this->registerHook('displayProductPriceBlock')) {
+            !$this->registerHook('displayProductPriceBlock')||
+            !$this->registerHook('displayHeader')){
             return false;
         }
 
@@ -365,13 +366,15 @@ EOF;
 		return $landing_config ?? null;
     }
 
-    public function makeCurlToApurata($method, $path, $data = null, $fire_and_forget=FALSE) {
+    public function makeCurlToApurata($method, $path, $data = null, $fire_and_forget=FALSE, $domain = null) {
 		// $method: "GET" or "POST"
         // $path: e.g. /pos/client/landing_config
         // If data is present, send it via JSON
 		$ch = curl_init();
-
-		$url = Configuration::get('APURATA_DOMAIN') . $path;
+        if (!$domain) {
+            $domain = Configuration::get('APURATA_DOMAIN');
+        }
+		$url = $domain . $path;
 		curl_setopt($ch, CURLOPT_URL, $url);
 
 		// Timeouts
@@ -588,5 +591,18 @@ EOF;
             "prestashop_version" => _PS_VERSION_,
             "ps_apurata_version" => $this->version,
         ), TRUE);
+    }
+    public function hookDisplayHeader(){
+        $path = '/vendor/pixels/apurata-pixel.txt';
+        $static_domain = 'https://static.apurata.com';
+        list($httpCode, $response) = $this->makeCurlToApurata("GET", $path, null, false, $static_domain);
+        if ($httpCode != 200) {
+            $response = '';
+            error_log("Apurataresponded with http_code ". $httpCode);
+        }
+        $this->smarty->assign([
+            'response' => $response,
+        ]);
+        return $this->display(__FILE__, 'apurata_pixel.tpl');
     }
 }
