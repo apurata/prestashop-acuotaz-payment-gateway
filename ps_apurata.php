@@ -598,6 +598,7 @@ EOF;
         list($httpCode, $response) = $this->makeCurlToApurata("GET", $path, null, false, $static_domain);
         if ($httpCode != 200) {
             $response = '';
+            error_log("Apurataresponded with http_code ". $httpCode);
         }
         $this->smarty->assign([
             'response' => $response,
