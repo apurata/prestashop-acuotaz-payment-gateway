@@ -1,6 +1,6 @@
 <?php
 /**
- * Version:           0.2.2
+ * Version:           0.2.3
  * Plugin Name:       aCuotaz Apurata
  * Description:       Finance your purchases with a quick aCuotaz Apurata loan.
  * Requires PHP:      7.2
@@ -35,7 +35,7 @@ class Ps_Apurata extends PaymentModule
     {
         $this->name = 'ps_apurata';
         $this->tab = 'payments_gateways';
-        $this->version = '0.2.2';
+        $this->version = '0.2.3';
         $this->ps_versions_compliancy = array('min' => '1.7.1.0', 'max' => _PS_VERSION_);
         $this->author = 'Apurata';
         $this->controllers = array('payment', 'validation');
@@ -57,9 +57,13 @@ class Ps_Apurata extends PaymentModule
         if (!empty($config['APURATA_ALLOW_HTTP'])) {
             $this->details = $config['APURATA_ALLOW_HTTP'];
         }
-        $domain = getenv('APURATA_API_DOMAIN') ?: 'https://apurata.com'; //'https://apurata.com'
-        Configuration::updateValue('APURATA_DOMAIN', $domain);
-
+        $APURATA_DOMAIN = getenv('APURATA_DOMAIN');
+        // Domain to use in API calls.
+        // In docker, there is a special IP for the host network.
+        // We use this IP to access the local apurata server from inside the container.
+        $APURATA_API_DOMAIN = getenv('APURATA_API_DOMAIN');
+        Configuration::updateValue('APURATA_DOMAIN', $APURATA_DOMAIN ?: 'https://apurata.com');
+        Configuration::updateValue('APURATA_API_DOMAIN', $APURATA_API_DOMAIN ?: 'https://apurata.com');
         $this->bootstrap = true;
         parent::__construct();
 
@@ -79,7 +83,6 @@ class Ps_Apurata extends PaymentModule
             '{bankwire_url}' => nl2br(Configuration::get('APURATA_UPDATE_ORDER_URL')),
             '{bankwire_url}' => nl2br(Configuration::get('APURATA_ALLOW_HTTP')),
         );
-
     }
 
     public function addOrderState($name)
@@ -314,7 +317,6 @@ EOF;
 			|| strcasecmp('on', $isHttps) == 0
 			|| strcasecmp('https', $isHttps) == 0
         );
-        //error_log(Configuration::get('APURATA_ALLOW_HTTP'));
 
         if (Configuration::get('APURATA_ALLOW_HTTP') == false && !$isHttps) {
 			return false;
@@ -372,7 +374,7 @@ EOF;
         // If data is present, send it via JSON
 		$ch = curl_init();
         if (!$domain) {
-            $domain = Configuration::get('APURATA_DOMAIN');
+            $domain = Configuration::get('APURATA_API_DOMAIN');
         }
 		$url = $domain . $path;
 		curl_setopt($ch, CURLOPT_URL, $url);
@@ -542,12 +544,33 @@ EOF;
                 '&user__first_name=' . urlencode((string) $customer->firstname) .
                 '&user__last_name=' . urlencode((string) $customer->lastname);
         }
+        try{
+            $url .= '&user__session_id=' . urldecode(Context::getContext()->cookie->id_guest);
+        }catch(\Throwable $e){
+            error_log('Error:can not get session_id');
+        }
         if ($pageType == 'product') {
             $url .= '&variable_amount=' . urldecode((string) $variable_price);
+            $product = new Product($_GET['id_product']);
+
+            if ($product) {
+                $url .= '&product__id=' . urlencode($product->id_shop_default) .
+                    '&product__name=' . urlencode($product->name[1]);
+            }
         }
         $number_of_items = $params['cart']->nbProducts();
-        if($pageType == 'cart' && $number_of_items > 1) {
-            $url .= '&multiple_products=' . urldecode('TRUE');
+        if($pageType == 'cart') {
+            if ($number_of_items > 1)
+                $url .= '&multiple_products=' . urldecode('TRUE');
+            $products = $params['cart']->getProducts(true);
+            $string_array = '[';
+            for($i=0; $i<sizeof($products); $i++) {
+                $product = $products[$i];
+                if ($i > 0)
+                    $string_array .= ',';
+                $string_array .= sprintf('{"id":"%s","name":"%s","amount":%s}', $product['id_product'], $product['name'], $product['price_with_reduction']);
+            }
+            $url .= '&products=' . urlencode($string_array . ']');
         }
         list($resp_code, $this->pay_with_apurata_addon) = $this->makeCurlToApurata("GET", $url);
         if ($resp_code == 200) {
@@ -568,16 +591,10 @@ EOF;
         return $this->generateApurataAddon('cart', $params, $total);
     }
     public function hookdisplayProductPriceBlock($params)
-    {   
+    {
         if ((isset($params['type']) && $params['type'] == 'price')) {
-            $variable_price = FALSE;
-            $product = new Product($_GET['id_product']);
-            $id_attributes = Context::getContext()->language->id;
-            $combinations = $product->getAttributeCombinations($id_attributes);
-            if (sizeof($combinations) > 1 ) {
-                $variable_price = TRUE;
-            }
-            return $this->generateApurataAddon('product', $params, $product->price,$variable_price);
+            $final_price = Product::getPriceStatic($_GET['id_product']);
+            return $this->generateApurataAddon('product', $params, $final_price,$variable_price);
         }
         return;
     }

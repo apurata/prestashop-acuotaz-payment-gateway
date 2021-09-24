@@ -77,6 +77,11 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
 		if ($address->vat_number) {
 			$string_ruc = '&customer_data__ruc='.urlencode($address->vat_number);
 		}
+		try{
+            $string_session_id = '&customer_data__session_id=' . urldecode(Context::getContext()->cookie->id_guest);
+        }catch(\Throwable $e){
+            error_log('Error:can not get session_id');
+        }
 		Tools::redirect( Configuration::get('APURATA_DOMAIN').
 						'/pos/crear-orden-y-continuar' .
 						'?order_id=' . urlencode($cart->id).
@@ -101,8 +106,9 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
                         '&customer_data__shipping_last_name=' . urlencode($customer->lastname) .
                         '&customer_data__shipping_city=' . urlencode($address->city) .
                         '&description=' . urlencode($description) .
-                        $string_dni .
-                        $string_ruc 
+						$string_dni .
+                        $string_ruc .
+						$string_session_id
                     );
     }
 }
