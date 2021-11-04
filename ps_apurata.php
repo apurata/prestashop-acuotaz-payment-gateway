@@ -1,6 +1,6 @@
 <?php
 /**
- * Version:           0.2.3
+ * Version:           0.2.4
  * Plugin Name:       aCuotaz Apurata
  * Description:       Finance your purchases with a quick aCuotaz Apurata loan.
  * Requires PHP:      7.2

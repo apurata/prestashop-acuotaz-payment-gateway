@@ -37,6 +37,7 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
                 Tools::redirect('index.php?controller=order&step=1');
         $currency = $this->context->currency;
         $total = (float)$cart->getOrderTotal(true, Cart::BOTH);
+        $validation = null;
         switch ($event) {
             case 'onhold':
                 $id_order = (int)Order::getIdByCartId($id_cart);
@@ -54,6 +55,12 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
                         $customer->secure_key
                     );
                 //Tools::redirect('index.php?controller=order-confirmation&id_cart='.$id_cart.'&id_module='.$this->module->id.'&id_order='.$this->module->currentOrder.'&key='.$customer->secure_key);
+                header('Apurata-Log: created=' .( $validation ? 'true':'false') .
+                    ' PS_OS_APURATA=' . Configuration::get('PS_OS_APURATA') .
+                    ' id_cart=' . $id_cart .
+                    ' module->displayName= ' . $this->module->displayName .
+                    ' customer->secure_key=' . $customer->secure_key
+                );
                 http_response_code(200);
                 exit;
             case 'validated':
