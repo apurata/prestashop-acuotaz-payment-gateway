@@ -1,0 +1,52 @@
+# Local PrestaShop 1.7 — see README.md "Local development".
+# Shop http://localhost:8080 | Admin http://localhost:8080/admin-dev
+# admin@apurata.local / apurata123
+# Never chown the bind-mounted modules/ps_apurata path (breaks host git).
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: ps-apurata-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: prestashop
+    volumes:
+      - ps_apurata_db:/var/lib/mysql
+    networks:
+      - ps_apurata_net
+
+  prestashop:
+    image: prestashop/prestashop:1.7
+    container_name: ps-apurata-shop
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8080:80"
+    environment:
+      DB_SERVER: mysql
+      DB_NAME: prestashop
+      DB_USER: root
+      DB_PASSWD: admin
+      PS_INSTALL_AUTO: 1
+      PS_DEV_MODE: 1
+      PS_DOMAIN: localhost:8080
+      PS_FOLDER_ADMIN: admin-dev
+      PS_FOLDER_INSTALL: install-dev
+      PS_COUNTRY: pe
+      ADMIN_MAIL: admin@apurata.local
+      ADMIN_PASSWD: apurata123
+    volumes:
+      - ps_apurata_html:/var/www/html
+      - type: bind
+        source: .
+        target: /var/www/html/modules/ps_apurata
+    networks:
+      - ps_apurata_net
+
+volumes:
+  ps_apurata_db:
+  ps_apurata_html:
+
+networks:
+  ps_apurata_net:

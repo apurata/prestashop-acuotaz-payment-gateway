@@ -1,6 +1,55 @@
 # aCuotaz module for Prestashop
 _Evaluate your customers and finance their purchase with fortnightly instalments, without a credit card._
 
+## Local development
+
+PrestaShop 1.7 + this module (bind-mounted as `ps_apurata`).
+
+```bash
+docker compose up -d
+# Wait until logs show: Installation successful! / Starting web server
+docker compose logs -f prestashop
+```
+
+| | |
+|---|---|
+| Shop | http://localhost:8080 |
+| Admin | http://localhost:8080/admin-dev |
+| Login | `admin@apurata.local` / `apurata123` |
+
+Install / reinstall the module (run as `www-data`, not root):
+
+```bash
+docker compose exec -u www-data prestashop \
+  php /var/www/html/bin/console prestashop:module install ps_apurata
+```
+
+Configure in BO: **Module Manager → aCuotaz** → Client ID, Client Token, **Allow HTTP = YES**.
+
+Baseline check (Classic theme):
+
+1. Product page → addon near the price (`displayProductPriceBlock`)
+2. Cart → addon in footer (`displayShoppingCartFooter`)
+3. Checkout → aCuotaz payment method (`paymentOptions`)
+
+If the shop shows `Permission denied` on `var/cache`:
+
+```bash
+docker compose exec -u root prestashop \
+  chown -R www-data:www-data /var/www/html/var
+```
+
+Do **not** `chown` `/var/www/html/modules/ps_apurata` (host bind mount).
+
+Stop / reset:
+
+```bash
+docker compose down          # keep DB + shop data
+docker compose down -v       # wipe volumes (full reinstall next up)
+```
+
+---
+
 ## Starting 🚀
 _These instructions will allow you to upload the [aCuotaz](https://apurata.com/app) module into your Prestashop store._
 
@@ -53,7 +102,7 @@ _These are the changes you will see in your prestashop._
 
 ### Update version 📌
 
-_To update the module with a new version._ 
+_To update the module with a new version._
 * First you must uninstall the current module and check "Optional: remove module directory after uninstallation" and upload the new version again.
 
 ![](images/result_upgrade.jpg)
