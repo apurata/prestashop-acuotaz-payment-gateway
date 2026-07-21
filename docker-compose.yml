@@ -36,6 +36,11 @@ services:
       PS_COUNTRY: pe
       ADMIN_MAIL: admin@apurata.local
       ADMIN_PASSWD: apurata123
+      # Local Apurata webserver via host nginx (:9000). See onboarding_test_prestashop.py
+      APURATA_DOMAIN: http://host.docker.internal:9000
+      APURATA_API_DOMAIN: http://host.docker.internal:9000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ps_apurata_html:/var/www/html
       - type: bind
