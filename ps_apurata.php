@@ -594,7 +594,7 @@ EOF;
     {
         if ((isset($params['type']) && $params['type'] == 'price')) {
             $final_price = Product::getPriceStatic($_GET['id_product']);
-            return $this->generateApurataAddon('product', $params, $final_price,$variable_price);
+            return $this->generateApurataAddon('product', $params, $final_price);
         }
         return;
     }
