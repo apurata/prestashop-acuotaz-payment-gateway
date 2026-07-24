@@ -2,7 +2,7 @@
 {* Leo MixFashion (and similar) use display:flex on .product-prices.
    The addon is injected inside that row and is not visible. Move it below
    the price block so the widget keeps its normal width (API max-width ~27em).
-   Re-run after PrestaShop AJAX product updates (combinations). *}
+   Re-place on prestashop updatedProduct only (DOM move; no extra addon fetch). *}
 <style>
 #acuotaz-add-on {
   display: block !important;
@@ -60,14 +60,10 @@
   function bindApurataAddonPlacement() {
     placeApurataAddon();
 
+    // Combination/price AJAX from PrestaShop core. Does not call Apurata itself;
+    // only repositions HTML already returned in the product refresh.
     if (window.prestashop && typeof window.prestashop.on === 'function') {
       window.prestashop.on('updatedProduct', placeApurataAddon);
-    }
-
-    var prices = document.querySelector('.product-prices');
-    if (prices && window.MutationObserver) {
-      var observer = new MutationObserver(placeApurataAddon);
-      observer.observe(prices, { childList: true, subtree: true });
     }
   }
 
