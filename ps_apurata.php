@@ -1,6 +1,6 @@
 <?php
 /**
- * Version:           0.2.4
+ * Version:           0.2.6
  * Plugin Name:       aCuotaz Apurata
  * Description:       Finance your purchases with a quick aCuotaz Apurata loan.
  * Requires PHP:      7.2
@@ -35,7 +35,7 @@ class Ps_Apurata extends PaymentModule
     {
         $this->name = 'ps_apurata';
         $this->tab = 'payments_gateways';
-        $this->version = '0.2.3';
+        $this->version = '0.2.6';
         $this->ps_versions_compliancy = array('min' => '1.7.1.0', 'max' => _PS_VERSION_);
         $this->author = 'Apurata';
         $this->controllers = array('payment', 'validation');
@@ -235,7 +235,7 @@ class Ps_Apurata extends PaymentModule
                     </script>
 EOF;
         $newOption->setModuleName($this->name)
-                ->setCallToActionText('Cuotas sin tarjeta de crédito - aCuotaz')
+                ->setCallToActionText('aCuotaz - Cuotas sin tarjeta, sólo con DNI')
                 ->setAdditionalInformation($description)
                 ->setLogo('https://static.apurata.com/img/logo-dark-aCuotaz.svg')
                 ->setAction($this->context->link->getModuleLink($this->name, 'validation', array(), true));
