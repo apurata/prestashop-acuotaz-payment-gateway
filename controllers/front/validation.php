@@ -71,11 +71,21 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
 		}
 		$string_dni = '';
 		$string_ruc = '';
-		if ($address->dni) {
+		$string_phone = '';
+		$string_session_id = '';
+		// Address.dni is a generic tax ID in PrestaShop, not PE DNI; only forward real 8-digit DNIs.
+		if (preg_match('/^\d{8}$/', (string) $address->dni)) {
 			$string_dni = '&customer_data__dni='.urlencode($address->dni);
 		}
 		if ($address->vat_number) {
 			$string_ruc = '&customer_data__ruc='.urlencode($address->vat_number);
+		}
+		// Prefer phone_mobile (checkout "teléfono móvil"); skip junk like "00".
+		foreach (array($address->phone_mobile, $address->phone) as $candidate) {
+			if ($candidate && $candidate !== '00') {
+				$string_phone = '&customer_data__phone='.urlencode($candidate);
+				break;
+			}
 		}
 		try{
             $string_session_id = '&customer_data__session_id=' . urldecode(Context::getContext()->cookie->id_guest);
@@ -94,7 +104,7 @@ class Ps_ApurataValidationModuleFrontController extends ModuleFrontController
                         '&customer_data__billing_company=' . urlencode($address->company) .
                         '&customer_data__shipping_company=' . urlencode('') .
                         '&customer_data__email=' . urlencode($customer->email) .
-                        '&customer_data__phone=' . urlencode($address->phone) .
+                        $string_phone .
                         '&customer_data__billing_address_1=' . urlencode($address->address1) .
                         '&customer_data__billing_address_2=' . urlencode($address->address2) .
                         '&customer_data__billing_first_name=' . urlencode($customer->firstname) .
