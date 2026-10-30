@@ -28,6 +28,13 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
 	 */
 	public function postProcess()
 	{
+        // Same contract as Magento/OpenCart: Apurata-Auth Bearer must match the module token
+        // before any cart/order mutation (DEV-1018 / CWE-306).
+        if (!$this->isAuthorizedApurataWebhook()) {
+            http_response_code(401);
+            exit;
+        }
+
         $id_cart = Tools::getValue('order_id');
         $event = Tools::getValue('event');
         $new_order_state = 0;
@@ -54,12 +61,11 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
                         false,
                         $customer->secure_key
                     );
-                //Tools::redirect('index.php?controller=order-confirmation&id_cart='.$id_cart.'&id_module='.$this->module->id.'&id_order='.$this->module->currentOrder.'&key='.$customer->secure_key);
+                // Do not put secure_key in response headers — it is a customer credential.
                 header('Apurata-Log: created=' .( $validation ? 'true':'false') .
                     ' PS_OS_APURATA=' . Configuration::get('PS_OS_APURATA') .
                     ' id_cart=' . $id_cart .
-                    ' module->displayName= ' . $this->module->displayName .
-                    ' customer->secure_key=' . $customer->secure_key
+                    ' module->displayName= ' . $this->module->displayName
                 );
                 http_response_code(200);
                 exit;
@@ -92,4 +98,36 @@ class Ps_ApurataUpdateOrderModuleFrontController extends ModuleFrontController
         http_response_code(200);
         exit;
 	}
+
+    /**
+     * True when Apurata-Auth Bearer matches APURATA_CLIENT_TOKEN (server-to-server webhook).
+     */
+    private function isAuthorizedApurataWebhook()
+    {
+        $expected = Configuration::get('APURATA_CLIENT_TOKEN');
+        if (!$expected) {
+            return false;
+        }
+        $auth = $this->getApurataAuthHeader();
+        if (!$auth || stripos($auth, 'Bearer ') !== 0) {
+            return false;
+        }
+        $token = trim(substr($auth, strlen('Bearer ')));
+        return hash_equals((string) $expected, $token);
+    }
+
+    private function getApurataAuthHeader()
+    {
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+            if (is_array($headers)) {
+                foreach ($headers as $name => $value) {
+                    if (strcasecmp($name, 'Apurata-Auth') === 0) {
+                        return $value;
+                    }
+                }
+            }
+        }
+        return isset($_SERVER['HTTP_APURATA_AUTH']) ? $_SERVER['HTTP_APURATA_AUTH'] : '';
+    }
 }
